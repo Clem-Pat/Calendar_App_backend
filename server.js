@@ -5,11 +5,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const db = mysql.createConnection({
-  host: 'autorack.proxy.rlwy.net',
-  port: 33328,
-  user: 'root',
-  password: 'VeucxKPpzypxltmUjplTqWuDoYoPOsih',
-  database: 'railway',
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
 });
 
 db.connect((err) => {
@@ -20,8 +20,17 @@ db.connect((err) => {
   console.log('Connected to MySQL');
 });
 
-app.get('/', (req, res) => {
-  res.send('Hello from Railway!');
+// Route to fetch diners
+app.get('/diners', (req, res) => {
+  const query = 'SELECT * FROM diners';
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error executing query:', err);
+      res.status(500).send('Database query error');
+      return;
+    }
+    res.json(results); // Send results as JSON
+  });
 });
 
 app.listen(PORT, () => {
