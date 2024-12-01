@@ -59,6 +59,20 @@ app.get('/guests', (req, res) => {
   });
 });
 
+app.post('/diners', (req, res) => {
+  const { name, date } = req.body;  // Assuming you're sending the diner data in the request body
+  
+  const query = 'INSERT INTO diner (name, date) VALUES (?, ?)';
+  db.query(query, [name, date], (err, results) => {
+    if (err) {
+      console.error('Error executing query:', err);
+      res.status(500).send('Database query error');
+      return;
+    }
+    res.status(201).json({ id: results.insertId, name, date }); // Send back the created diner info, including the new ID
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
