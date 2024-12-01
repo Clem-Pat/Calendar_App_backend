@@ -22,7 +22,33 @@ db.connect((err) => {
 
 // Route to fetch diners
 app.get('/diners', (req, res) => {
-  const query = 'SELECT * FROM diners';
+  const query = 'SELECT * FROM diner';
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error executing query:', err);
+      res.status(500).send('Database query error');
+      return;
+    }
+    res.json(results); // Send results as JSON
+  });
+});
+
+// Route to fetch diners
+app.get('/sets', (req, res) => {
+  const query = 'SELECT * FROM set';
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error executing query:', err);
+      res.status(500).send('Database query error');
+      return;
+    }
+    res.json(results); // Send results as JSON
+  });
+});
+
+// Route to fetch diners
+app.get('/guests', (req, res) => {
+  const query = 'SELECT * FROM guest';
   db.query(query, (err, results) => {
     if (err) {
       console.error('Error executing query:', err);
