@@ -35,7 +35,7 @@ app.get('/diners', (req, res) => {
 
 // Route to fetch diners
 app.get('/sets', (req, res) => {
-  const query = 'SELECT * FROM set';
+  const query = 'SELECT * FROM sets';
   db.query(query, (err, results) => {
     if (err) {
       console.error('Error executing query:', err);
@@ -48,7 +48,7 @@ app.get('/sets', (req, res) => {
 
 // Route to fetch diners
 app.get('/guests', (req, res) => {
-  const query = 'SELECT * FROM guest';
+  const query = 'SELECT * FROM guests';
   db.query(query, (err, results) => {
     if (err) {
       console.error('Error executing query:', err);
