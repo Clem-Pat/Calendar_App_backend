@@ -66,7 +66,7 @@ app.post('/diners', (req, res) => {
   db.query(query, [name, date], (err, results) => {
     if (err) {
       console.error('Error executing query:', err);
-      res.status(500).send('Database query error');
+      res.status(500).send(`Database query error trying to INSERT INTO diner (name, date) VALUES (?, ?) with values: ${name}, ${date}`);
       return;
     }
     res.status(201).json({ id: results.insertId, name, date }); // Send back the created diner info, including the new ID
