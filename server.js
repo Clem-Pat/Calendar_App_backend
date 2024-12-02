@@ -89,7 +89,7 @@ app.post('/sets', (req, res) => {
   db.query(query, [name, description, recipe], (err, results) => {
     if (err) {
       console.error('Error executing query:', err);
-      res.status(500).send(`Database query error trying to INSERT INTO sets (name, description, recipe) VALUES (?, ?, ?, ?) with values: ${name}, ${description}, ${ingredients}, ${recipe}`);
+      res.status(500).send(`Database query error trying to INSERT INTO sets (name, description, recipe) VALUES (?, ?, ?, ?) with values: ${name}, ${description}, ${recipe}`);
       return;
     }
     res.status(201).json({ id: results.insertId, name, description, recipe });
@@ -156,7 +156,12 @@ app.get('/diner_sets/:dinerId', (req, res) => {
       res.status(500).send('Database query error');
       return;
     }
-    res.json(results);
+    res.json(results.map(row => ({
+      ...row,
+      name: row.name || '',
+      description: row.description || '',
+      recipe: row.recipe || ''
+    })));
   });
 });
 
