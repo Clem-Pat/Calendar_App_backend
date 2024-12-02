@@ -81,17 +81,18 @@ app.post('/guests', (req, res) => {
   });
 });
 
+
 // Insert Set
 app.post('/sets', (req, res) => {
-  const { name, description } = req.body;
-  const query = 'INSERT INTO sets (name, description) VALUES (?, ?)';
-  db.query(query, [name, description], (err, results) => {
+  const { name, description, recipe } = req.body;
+  const query = 'INSERT INTO sets (name, description, recipe) VALUES (?, ?, ?, ?)';
+  db.query(query, [name, description, recipe], (err, results) => {
     if (err) {
       console.error('Error executing query:', err);
-      res.status(500).send(`Database query error trying to INSERT INTO sets (name, description) VALUES (?, ?) with values: ${name}, ${description}`);
+      res.status(500).send(`Database query error trying to INSERT INTO sets (name, description, recipe) VALUES (?, ?, ?, ?) with values: ${name}, ${description}, ${ingredients}, ${recipe}`);
       return;
     }
-    res.status(201).json({ id: results.insertId, name, description });
+    res.status(201).json({ id: results.insertId, name, description, recipe });
   });
 });
 
@@ -144,7 +145,7 @@ app.get('/diner_guests/:dinerId', (req, res) => {
 // Get Sets for Diner
 app.get('/diner_sets/:dinerId', (req, res) => {
   const query = `
-    SELECT sets.id, sets.name, sets.description
+    SELECT sets.id, sets.name, sets.description, sets.recipe
     FROM sets
     INNER JOIN diner_set ON sets.id = diner_set.set_id
     WHERE diner_set.diner_id = ?
@@ -158,6 +159,7 @@ app.get('/diner_sets/:dinerId', (req, res) => {
     res.json(results);
   });
 });
+
 
 // Delete Diner
 app.delete('/diners/:id', (req, res) => {
