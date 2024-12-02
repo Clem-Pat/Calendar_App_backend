@@ -268,6 +268,19 @@ app.put('/sets/:id', (req, res) => {
   });
 });
 
+// Delete Guests for Diner
+app.delete('/diner_guests/:dinerId', (req, res) => {
+  const query = 'DELETE FROM diner_guest WHERE diner_id = ?';
+  db.query(query, [req.params.dinerId], (err, results) => {
+    if (err) {
+      console.error('Error executing query:', err);
+      res.status(500).send(`Database query error trying to DELETE FROM diner_guest WHERE diner_id = ? with value: ${req.params.dinerId}`);
+      return;
+    }
+    res.send();
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
