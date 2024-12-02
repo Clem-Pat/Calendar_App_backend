@@ -1,14 +1,15 @@
 const express = require('express');
 const mysql = require('mysql2');
+const bodyParser = require('body-parser');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+app.use(bodyParser.json());
 
 const db = mysql.createConnection({
   host: process.env.MYSQLHOST,
-  port: process.env.MYSQLPORT || 3000,
+  port: process.env.MYSQLPORT || 3306, // Default MySQL port is 3306
   user: process.env.MYSQLUSER,
   password: process.env.MYSQLPASSWORD,
   database: process.env.MYSQLDATABASE,
@@ -21,46 +22,6 @@ db.connect((err) => {
   }
   console.log('Connected to MySQL');
 });
-
-// Route to fetch diners
-app.get('/diners', (req, res) => {
-  const query = 'SELECT * FROM diner';
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error('Error executing query:', err);
-      res.status(500).send('Database query error');
-      return;
-    }
-    res.json(results); // Send results as JSON
-  });
-});
-
-// Route to fetch diners
-app.get('/sets', (req, res) => {
-  const query = 'SELECT * FROM sets';
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error('Error executing query:', err);
-      res.status(500).send('Database query error');
-      return;
-    }
-    res.json(results); // Send results as JSON
-  });
-});
-
-// Route to fetch diners
-app.get('/guests', (req, res) => {
-  const query = 'SELECT * FROM guests';
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error('Error executing query:', err);
-      res.status(500).send('Database query error');
-      return;
-    }
-    res.json(results); // Send results as JSON
-  });
-});
-
 
 // Insert Diner
 app.post('/diners', (req, res) => {
@@ -109,11 +70,11 @@ app.get('/diners/:id', (req, res) => {
 // Insert Guest
 app.post('/guests', (req, res) => {
   const { first_name, name } = req.body;
-  const query = 'INSERT INTO Guest (first_name, name) VALUES (?, ?)';
+  const query = 'INSERT INTO guests (first_name, name) VALUES (?, ?)';
   db.query(query, [first_name, name], (err, results) => {
     if (err) {
       console.error('Error executing query:', err);
-      res.status(500).send(`Database query error trying to INSERT INTO Guest (first_name, name) VALUES (?, ?) with values: ${first_name}, ${name}`);
+      res.status(500).send(`Database query error trying to INSERT INTO guests (first_name, name) VALUES (?, ?) with values: ${first_name}, ${name}`);
       return;
     }
     res.status(201).json({ id: results.insertId, first_name, name });
@@ -122,26 +83,26 @@ app.post('/guests', (req, res) => {
 
 // Insert Set
 app.post('/sets', (req, res) => {
-  const { name, description, ingredients, recipe } = req.body;
-  const query = 'INSERT INTO Set (name, description, ingredients, recipe) VALUES (?, ?, ?, ?)';
-  db.query(query, [name, description, ingredients, recipe], (err, results) => {
+  const { name, description } = req.body;
+  const query = 'INSERT INTO sets (name, description) VALUES (?, ?)';
+  db.query(query, [name, description], (err, results) => {
     if (err) {
       console.error('Error executing query:', err);
-      res.status(500).send(`Database query error trying to INSERT INTO Set (name, description, ingredients, recipe) VALUES (?, ?, ?, ?) with values: ${name}, ${description}, ${ingredients}, ${recipe}`);
+      res.status(500).send(`Database query error trying to INSERT INTO sets (name, description) VALUES (?, ?) with values: ${name}, ${description}`);
       return;
     }
-    res.status(201).json({ id: results.insertId, name, description, ingredients, recipe });
+    res.status(201).json({ id: results.insertId, name, description });
   });
 });
 
 // Insert Diner Guest
 app.post('/diner_guests', (req, res) => {
   const { diner_id, guest_id } = req.body;
-  const query = 'INSERT INTO diner_Guest (diner_id, Guest_id) VALUES (?, ?)';
+  const query = 'INSERT INTO diner_guest (diner_id, guest_id) VALUES (?, ?)';
   db.query(query, [diner_id, guest_id], (err, results) => {
     if (err) {
       console.error('Error executing query:', err);
-      res.status(500).send(`Database query error trying to INSERT INTO diner_Guest (diner_id, Guest_id) VALUES (?, ?) with values: ${diner_id}, ${guest_id}`);
+      res.status(500).send(`Database query error trying to INSERT INTO diner_guest (diner_id, guest_id) VALUES (?, ?) with values: ${diner_id}, ${guest_id}`);
       return;
     }
     res.status(201).send();
@@ -151,14 +112,50 @@ app.post('/diner_guests', (req, res) => {
 // Insert Diner Set
 app.post('/diner_sets', (req, res) => {
   const { diner_id, set_id } = req.body;
-  const query = 'INSERT INTO diner_Set (diner_id, Set_id) VALUES (?, ?)';
+  const query = 'INSERT INTO diner_set (diner_id, set_id) VALUES (?, ?)';
   db.query(query, [diner_id, set_id], (err, results) => {
     if (err) {
       console.error('Error executing query:', err);
-      res.status(500).send(`Database query error trying to INSERT INTO diner_Set (diner_id, Set_id) VALUES (?, ?) with values: ${diner_id}, ${set_id}`);
+      res.status(500).send(`Database query error trying to INSERT INTO diner_set (diner_id, set_id) VALUES (?, ?) with values: ${diner_id}, ${set_id}`);
       return;
     }
     res.status(201).send();
+  });
+});
+
+// Get Guests for Diner
+app.get('/diner_guests/:dinerId', (req, res) => {
+  const query = `
+    SELECT guests.id, guests.first_name, guests.name
+    FROM guests
+    INNER JOIN diner_guest ON guests.id = diner_guest.guest_id
+    WHERE diner_guest.diner_id = ?
+  `;
+  db.query(query, [req.params.dinerId], (err, results) => {
+    if (err) {
+      console.error('Error executing query:', err);
+      res.status(500).send('Database query error');
+      return;
+    }
+    res.json(results);
+  });
+});
+
+// Get Sets for Diner
+app.get('/diner_sets/:dinerId', (req, res) => {
+  const query = `
+    SELECT sets.id, sets.name, sets.description
+    FROM sets
+    INNER JOIN diner_set ON sets.id = diner_set.set_id
+    WHERE diner_set.diner_id = ?
+  `;
+  db.query(query, [req.params.dinerId], (err, results) => {
+    if (err) {
+      console.error('Error executing query:', err);
+      res.status(500).send('Database query error');
+      return;
+    }
+    res.json(results);
   });
 });
 
@@ -177,7 +174,7 @@ app.delete('/diners/:id', (req, res) => {
 
 // Delete Guest
 app.delete('/guests/:id', (req, res) => {
-  const query = 'DELETE FROM Guest WHERE id = ?';
+  const query = 'DELETE FROM guests WHERE id = ?';
   db.query(query, [req.params.id], (err, results) => {
     if (err) {
       console.error('Error executing query:', err);
@@ -190,7 +187,7 @@ app.delete('/guests/:id', (req, res) => {
 
 // Delete Set
 app.delete('/sets/:id', (req, res) => {
-  const query = 'DELETE FROM Set WHERE id = ?';
+  const query = 'DELETE FROM sets WHERE id = ?';
   db.query(query, [req.params.id], (err, results) => {
     if (err) {
       console.error('Error executing query:', err);
@@ -204,11 +201,11 @@ app.delete('/sets/:id', (req, res) => {
 // Delete Diner Guest
 app.delete('/diner_guests', (req, res) => {
   const { diner_id, guest_id } = req.body;
-  const query = 'DELETE FROM diner_Guest WHERE diner_id = ? AND Guest_id = ?';
+  const query = 'DELETE FROM diner_guest WHERE diner_id = ? AND guest_id = ?';
   db.query(query, [diner_id, guest_id], (err, results) => {
     if (err) {
       console.error('Error executing query:', err);
-      res.status(500).send(`Database query error trying to DELETE FROM diner_Guest WHERE diner_id = ? AND Guest_id = ? with values: ${diner_id}, ${guest_id}`);
+      res.status(500).send(`Database query error trying to DELETE FROM diner_guest WHERE diner_id = ? AND guest_id = ? with values: ${diner_id}, ${guest_id}`);
       return;
     }
     res.send();
@@ -218,11 +215,11 @@ app.delete('/diner_guests', (req, res) => {
 // Delete Diner Set
 app.delete('/diner_sets', (req, res) => {
   const { diner_id, set_id } = req.body;
-  const query = 'DELETE FROM diner_Set WHERE diner_id = ? AND Set_id = ?';
+  const query = 'DELETE FROM diner_set WHERE diner_id = ? AND set_id = ?';
   db.query(query, [diner_id, set_id], (err, results) => {
     if (err) {
       console.error('Error executing query:', err);
-      res.status(500).send(`Database query error trying to DELETE FROM diner_Set WHERE diner_id = ? AND Set_id = ? with values: ${diner_id}, ${set_id}`);
+      res.status(500).send(`Database query error trying to DELETE FROM diner_set WHERE diner_id = ? AND set_id = ? with values: ${diner_id}, ${set_id}`);
       return;
     }
     res.send();
@@ -246,11 +243,11 @@ app.put('/diners/:id', (req, res) => {
 // Update Guest
 app.put('/guests/:id', (req, res) => {
   const { first_name, name } = req.body;
-  const query = 'UPDATE Guest SET first_name = ?, name = ? WHERE id = ?';
+  const query = 'UPDATE guests SET first_name = ?, name = ? WHERE id = ?';
   db.query(query, [first_name, name, req.params.id], (err, results) => {
     if (err) {
       console.error('Error executing query:', err);
-      res.status(500).send(`Database query error trying to UPDATE Guest SET first_name = ?, name = ? WHERE id = ? with values: ${first_name}, ${name}, ${req.params.id}`);
+      res.status(500).send(`Database query error trying to UPDATE guests SET first_name = ?, name = ? WHERE id = ? with values: ${first_name}, ${name}, ${req.params.id}`);
       return;
     }
     res.send();
@@ -259,20 +256,16 @@ app.put('/guests/:id', (req, res) => {
 
 // Update Set
 app.put('/sets/:id', (req, res) => {
-  const { name, description, ingredients, recipe } = req.body;
-  const query = 'UPDATE Set SET name = ?, description = ?, ingredients = ?, recipe = ? WHERE id = ?';
-  db.query(query, [name, description, ingredients, recipe, req.params.id], (err, results) => {
+  const { name, description } = req.body;
+  const query = 'UPDATE sets SET name = ?, description = ? WHERE id = ?';
+  db.query(query, [name, description, req.params.id], (err, results) => {
     if (err) {
       console.error('Error executing query:', err);
-      res.status(500).send(`Database query error trying to UPDATE Set SET name = ?, description = ?, ingredients = ?, recipe = ? WHERE id = ? with values: ${name}, ${description}, ${ingredients}, ${recipe}, ${req.params.id}`);
+      res.status(500).send(`Database query error trying to UPDATE sets SET name = ?, description = ? WHERE id = ? with values: ${name}, ${description}, ${req.params.id}`);
       return;
     }
     res.send();
   });
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
 });
 
 app.listen(PORT, () => {
