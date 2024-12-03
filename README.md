@@ -1,5 +1,5 @@
 # Calendar_App_backend
-Backend for a Calendar App
+A personal challenge to code a backend for a Calendar App
 
 This backend is then hosted on Railway and connected to a hosted MYSQL database. 
 It then listens to any client frontend that requires reading or writing to the database.
