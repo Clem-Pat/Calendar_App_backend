@@ -85,11 +85,11 @@ app.post('/guests', (req, res) => {
 // Insert Set
 app.post('/sets', (req, res) => {
   const { name, description, recipe } = req.body;
-  const query = 'INSERT INTO sets (name, description, recipe) VALUES (?, ?, ?, ?)';
+  const query = 'INSERT INTO sets (name, description, recipe) VALUES (?, ?, ?)';
   db.query(query, [name, description, recipe], (err, results) => {
     if (err) {
       console.error('Error executing query:', err);
-      res.status(500).send(`Database query error trying to INSERT INTO sets (name, description, recipe) VALUES (?, ?, ?, ?) with values: ${name}, ${description}, ${recipe}`);
+      res.status(500).send(`Database query error trying to INSERT INTO sets (name, description, recipe) VALUES (?, ?, ?) with values: ${name}, ${description}, ${recipe}`);
       return;
     }
     res.status(201).json({ id: results.insertId, name, description, recipe });
